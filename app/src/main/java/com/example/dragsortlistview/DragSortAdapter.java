@@ -60,4 +60,15 @@ public class DragSortAdapter extends BaseAdapter {
         });
         return view;
     }
+
+    public void dragItem(int start,int end){
+        if (start > end){
+            data.add(end,data.get(start));
+            data.remove(start + 1);
+        }else {
+            data.add(end+1,data.get(start));
+            data.remove(start);
+        }
+
+    }
 }

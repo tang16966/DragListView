@@ -2,9 +2,6 @@ package com.example.dragsortlistview;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.PixelFormat;
-import android.os.Handler;
-import android.os.Message;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.MotionEvent;
@@ -22,12 +19,15 @@ public class DragSortListView extends ListView {
     private boolean isLongPase;
     private boolean isHavePosition;
     private int itemPosition;
+    private View itemView;
+
 
 
     private Bitmap itemBitmap;
     private WindowManager windowManager;
     private WindowManager.LayoutParams params;
     private ImageView imageView;
+    private DragSortAdapter dragSortAdapter;
 
     public DragSortListView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -43,6 +43,7 @@ public class DragSortListView extends ListView {
                 itemPosition = pointToPosition(downX,downY);
                 //当点击区域有时才能拖拽
                 isHavePosition = true;
+                dragSortAdapter = (DragSortAdapter) getAdapter();
                 break;
             case MotionEvent.ACTION_MOVE:
                 if (isLongPase){
@@ -51,6 +52,7 @@ public class DragSortListView extends ListView {
                     offsetX = moveX - offsetX;
                     offsetY = moveY - offsetY;
                     updateImagView();
+                    updateItem();
                 }
                 break;
             case MotionEvent.ACTION_UP:
@@ -62,14 +64,16 @@ public class DragSortListView extends ListView {
 
 
 
+
     private void startDrag(){
-        final View itemView = getItemView(itemPosition);
+        itemView = getItemView(itemPosition);
         //绘制缓存
         itemView.setDrawingCacheEnabled(true);
         //提取缓存
         itemBitmap = Bitmap.createBitmap(itemView.getDrawingCache());
         //清理
         itemView.setDrawingCacheEnabled(false);
+        itemView.setVisibility(INVISIBLE);
 
         imageView = new ImageView(getContext());
         imageView.setImageBitmap(itemBitmap);
@@ -110,10 +114,32 @@ public class DragSortListView extends ListView {
         }
     }
 
+    private void updateItem(){
+        int position = pointToPosition(moveX,moveY);
+
+        //隐藏后就变-1了，不知到为啥，索性这样判断
+        if (position == -1){
+
+        }else {
+            if (itemPosition != position){
+                dragSortAdapter.dragItem(itemPosition,position);
+                itemView.setVisibility(VISIBLE);
+                itemView = getItemView(position);
+                itemView.setVisibility(INVISIBLE);
+                itemPosition = position;
+                //bug跟新数据后就不隐藏了
+            }
+
+
+        }
+
+    }
+
     private void closeDrag(){
-        isHavePosition = false;
-        isLongPase = false;
         if (imageView != null){
+            isHavePosition = false;
+            isLongPase = false;
+            itemView.setVisibility(VISIBLE);
             windowManager.removeView(imageView);
             itemBitmap = null;
             imageView = null;
