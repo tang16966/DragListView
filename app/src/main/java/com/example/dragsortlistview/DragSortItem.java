@@ -58,7 +58,7 @@ public class DragSortItem extends LinearLayout {
 
                 break;
         }
-        return false;
+        return true;
     }
 
 

@@ -22,13 +22,13 @@ public class MainActivity extends AppCompatActivity {
             data.add("DragSortListView"+i);
         }
         listView.setAdapter(new DragSortAdapter(this,data));
-        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                listView.setLongPase();
-                return true;
-            }
-        });
+//        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+//            @Override
+//            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+//                listView.setLongPase();
+//                return true;
+//            }
+//        });
 
     }
 

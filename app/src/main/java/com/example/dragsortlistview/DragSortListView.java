@@ -2,6 +2,8 @@ package com.example.dragsortlistview;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.os.Handler;
+import android.os.Message;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.MotionEvent;
@@ -13,14 +15,13 @@ import android.widget.ListView;
 
 public class DragSortListView extends ListView {
 
-    private int downY,downX;
-    private int moveY,moveX;
-    private int offsetY,offsetX;
+    private int downY, downX;
+    private int moveY, moveX;
+    private int offsetY, offsetX;
     private boolean isLongPase;
     private boolean isHavePosition;
     private int itemPosition;
     private View itemView;
-
 
 
     private Bitmap itemBitmap;
@@ -35,37 +36,41 @@ public class DragSortListView extends ListView {
 
 
     @Override
-    public boolean onTouchEvent(MotionEvent ev) {
+    public boolean dispatchTouchEvent(MotionEvent ev) {
         switch (ev.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 downX = (int) ev.getX();
                 downY = (int) ev.getY();
-                itemPosition = pointToPosition(downX,downY);
+                itemPosition = pointToPosition(downX, downY);
                 //当点击区域有时才能拖拽
                 isHavePosition = true;
                 dragSortAdapter = (DragSortAdapter) getAdapter();
+                isPase = true;
+                longPase();
                 break;
             case MotionEvent.ACTION_MOVE:
-                if (isLongPase){
+                isPase = false;
+                thread.interrupt();
+                if (isLongPase) {
                     moveX = (int) ev.getX();
                     moveY = (int) ev.getY();
                     offsetX = moveX - offsetX;
                     offsetY = moveY - offsetY;
                     updateImagView();
                     updateItem();
+                    return false;
                 }
                 break;
             case MotionEvent.ACTION_UP:
+                isPase = false;
+                thread.interrupt();
                 closeDrag();
                 break;
         }
-        return super.onTouchEvent(ev);
+        return super.dispatchTouchEvent(ev);
     }
 
-
-
-
-    private void startDrag(){
+    private void startDrag() {
         itemView = getItemView(itemPosition);
         //绘制缓存
         itemView.setDrawingCacheEnabled(true);
@@ -85,11 +90,41 @@ public class DragSortListView extends ListView {
         params.height = WindowManager.LayoutParams.WRAP_CONTENT;
         params.gravity = Gravity.TOP;
         params.y = downY;
-        windowManager.addView(imageView,params);
+        windowManager.addView(imageView, params);
     }
 
-    public void setLongPase(){
-        if (isHavePosition){
+    private boolean isPase;
+    private Thread thread;
+    private void longPase(){
+        thread = new Thread(){
+            @Override
+            public void run() {
+                try {
+                    sleep(1000);
+                    if (isPase){
+                        Message message = new Message();
+                        message.what = 0;
+                        handler.sendMessage(message);
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        thread.start();
+    }
+
+    private Handler handler = new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+           if (msg.what == 0){
+               setLongPase();
+           }
+        }
+    };
+
+    public void setLongPase() {
+        if (isHavePosition) {
             this.isLongPase = true;
             startDrag();
         }
@@ -107,22 +142,22 @@ public class DragSortListView extends ListView {
     }
 
     //刷新
-    private void updateImagView(){
-        if (imageView != null){
+    private void updateImagView() {
+        if (imageView != null) {
             params.y = moveY;
-            windowManager.updateViewLayout(imageView,params);
+            windowManager.updateViewLayout(imageView, params);
         }
     }
 
-    private void updateItem(){
-        int position = pointToPosition(moveX,moveY);
+    private void updateItem() {
+        int position = pointToPosition(moveX, moveY);
 
         //隐藏后就变-1了，不知到为啥，索性这样判断
-        if (position == -1){
+        if (position == -1) {
 
-        }else {
-            if (itemPosition != position){
-                dragSortAdapter.dragItem(itemPosition,position);
+        } else {
+            if (itemPosition != position) {
+                dragSortAdapter.dragItem(itemPosition, position);
                 itemView.setVisibility(VISIBLE);
                 itemView = getItemView(position);
                 itemView.setVisibility(INVISIBLE);
@@ -135,8 +170,8 @@ public class DragSortListView extends ListView {
 
     }
 
-    private void closeDrag(){
-        if (imageView != null){
+    private void closeDrag() {
+        if (imageView != null) {
             isHavePosition = false;
             isLongPase = false;
             itemView.setVisibility(VISIBLE);

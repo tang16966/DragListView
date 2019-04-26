@@ -1,6 +1,7 @@
 package com.example.dragsortlistview;
 
 import android.content.Context;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -58,6 +59,7 @@ public class DragSortAdapter extends BaseAdapter {
                 notifyDataSetChanged();
             }
         });
+
         return view;
     }
 
@@ -69,6 +71,6 @@ public class DragSortAdapter extends BaseAdapter {
             data.add(end+1,data.get(start));
             data.remove(start);
         }
-
+        notifyDataSetChanged();
     }
 }
